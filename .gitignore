@@ -1,0 +1,10 @@
+*.swp
+.buildpath
+.project
+.settings/
+.idea/
+docs
+TAGS
+GPATH
+GTAGS
+GRTAGS
