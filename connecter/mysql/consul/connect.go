@@ -1,7 +1,8 @@
-package mysql
+package consul
 
 import (
 	"database/sql"
+	"go-connect/connecter/mysql/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -18,7 +19,7 @@ type mysqlConnector struct {
 	connections map[string]*gorm.DB
 	config      Configer
 	logger      logger.Interface
-	log         Log
+	log         log.Log
 }
 
 func init() {
@@ -64,7 +65,7 @@ func (m *mysqlConnector) New(options ...Option) *mysqlConnector {
 }
 
 // New Db Connected .
-func (m *mysqlConnector) NewConnected(clusterName string) (*gorm.DB, error) {
+func (m *mysqlConnector) connected(clusterName string) (*gorm.DB, error) {
 	
 	var (
 		dbConn *gorm.DB
@@ -103,15 +104,15 @@ func (m *mysqlConnector) NewConnected(clusterName string) (*gorm.DB, error) {
 	
 	sqbDb.SetConnMaxLifetime(time.Duration(conf.MysqlPoolConfig.ConnMaxLifetime) * time.Second)
 	
-	m.storageDbConnect(clusterName, dbConn)
+	m.storage(clusterName, dbConn)
 	
 	return dbConn, err
 }
 
 // Make Db Connect Return gorm db.
-func (m *mysqlConnector) MakeConnect(clusterName string) (db *gorm.DB, err error) {
+func (m *mysqlConnector) Make(clusterName string) (db *gorm.DB, err error) {
 	
-	if db = m.dbConnect(clusterName); nil != db {
+	if db = m.db(clusterName); nil != db {
 		
 		return db, nil
 		
@@ -119,7 +120,7 @@ func (m *mysqlConnector) MakeConnect(clusterName string) (db *gorm.DB, err error
 	
 	m.mutex.Lock()
 	
-	db, err = m.NewConnected(clusterName)
+	db, err = m.connected(clusterName)
 	
 	m.mutex.Unlock()
 	
@@ -127,7 +128,7 @@ func (m *mysqlConnector) MakeConnect(clusterName string) (db *gorm.DB, err error
 }
 
 // Storage Db Connect .
-func (m *mysqlConnector) storageDbConnect(clusterName string, db *gorm.DB) {
+func (m *mysqlConnector) storage(clusterName string, db *gorm.DB) {
 	
 	m.mutex.Lock()
 	
@@ -138,7 +139,7 @@ func (m *mysqlConnector) storageDbConnect(clusterName string, db *gorm.DB) {
 }
 
 // Fetch Db Connect .
-func (m *mysqlConnector) dbConnect(clusterName string) *gorm.DB {
+func (m *mysqlConnector) db(clusterName string) *gorm.DB {
 	
 	m.mutex.RLock()
 	

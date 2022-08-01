@@ -1,4 +1,4 @@
-package mysql
+package log
 
 type Logger interface {
 	Info()

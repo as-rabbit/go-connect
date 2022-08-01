@@ -1,0 +1,22 @@
+{
+  "test": {
+    "MysqlConfig": {
+      "Dsn"                      : "",
+      "SkipInitializeWithVersion": true,
+      "DefaultStringSize"        : 256,
+      "DisableDatetimePrecision" : true,
+      "DontSupportRenameIndex"   : true,
+      "DontSupportRenameColumn"  : true
+    },
+    "GormConfig" : {
+      "SkipDefaultTransaction"  : true,
+      "DisableNestedTransaction": true,
+      "AllowGlobalUpdate"       : true
+    },
+    "PoolConfig" : {
+      "ConnMaxLifeTime": 600,
+      "ConnMaxLifetime": 600,
+      "MaxOpenConn"    : 50
+    }
+  }
+}

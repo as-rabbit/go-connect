@@ -1,4 +1,4 @@
-package mysql
+package consul
 
 import (
 	"gorm.io/driver/mysql"
