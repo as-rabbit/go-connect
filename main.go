@@ -1,16 +1,27 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"go-connect/connecter/mysql/file"
+	"go-connect/connecter/file/mysql"
 )
 
 func main() {
-	
-	fileConf := file.NewConfig()
-	
-	d, err := fileConf.Get("test")
-	
-	fmt.Println(d, err)
-	
+
+	ctx := context.TODO()
+
+	newDb := mysql.NewConnector()
+
+	db, err := newDb.Make(ctx, "test")
+
+	fmt.Println(db, err)
+
+	//mysql.NewConnector()
+
+	//fileConf := file.NewConfig()
+	//
+	//d, err := fileConf.Get("test")
+	//
+	//fmt.Println(d, err)
+
 }

@@ -1,7 +1,7 @@
 {
   "test": {
     "MysqlConfig": {
-      "Dsn"                      : "",
+      "Dsn"                      : "root:Zodiac-Attic-Profane@tcp(10.200.0.1:3306)/account?loc=Local&parseTime=true&readTimeout=1s&timeout=1s&writeTimeout=1s&charset=utf8mb4",
       "SkipInitializeWithVersion": true,
       "DefaultStringSize"        : 256,
       "DisableDatetimePrecision" : true,
@@ -14,9 +14,12 @@
       "AllowGlobalUpdate"       : true
     },
     "PoolConfig" : {
-      "ConnMaxLifeTime": 600,
-      "ConnMaxLifetime": 600,
-      "MaxOpenConn"    : 50
+      "ConnMaxLifeTime"          : 600,
+      "ConnMaxLifetime"          : 600,
+      "MaxOpenConn"              : 50,
+      "LogLevel"                 : 1,
+      "IgnoreRecordNotFoundError": true,
+      "SlowThreshold"            : 200
     }
   }
 }

@@ -1,4 +1,4 @@
-package consul
+package mysql
 
 import (
 	"gorm.io/driver/mysql"
@@ -25,12 +25,11 @@ type ClusterConfig struct {
 }
 
 func NewConfig() (d *defaultConfig, err error) {
-	return &defaultConfig{
-	}, nil
+	return &defaultConfig{}, nil
 }
 
 func (d *defaultConfig) Get(clusterName string) (config *ClusterConfig, err error) {
-	
+
 	return &ClusterConfig{
 		MysqlConfig: mysql.Config{
 			DSN:                       "",

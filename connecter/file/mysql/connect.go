@@ -1,21 +1,22 @@
-package file
+package mysql
 
 import (
 	"context"
 	"database/sql"
+	"github.com/sirupsen/logrus"
+	"go-connect/connecter/config/db"
 	"golang.org/x/sync/singleflight"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"sync"
 	"time"
 )
 
 // Connect entity
-var entity *mysqlConnector
+var entity *MysqlConnector
 
 // Option Customize
-type Option func(*mysqlConnector)
+type Option func(*MysqlConnector)
 
 // Configer interface
 type Configer interface {
@@ -24,154 +25,161 @@ type Configer interface {
 
 // ConnectConfig Connect Config
 type ConnectConfig struct {
-	MysqlConfig     mysql.Config `json:"mysql_config"`
-	GormConfig      *gorm.Config `json:"gorm_config"`
-	MysqlPoolConfig PoolConfig   `json:"mysql_pool_config"`
+	MysqlConfig     mysql.Config  `json:"mysql_config"`
+	GormConfig      *gorm.Config  `json:"gorm_config"`
+	MysqlPoolConfig db.PoolConfig `json:"mysql_pool_config"`
 }
 
-// ConnectConfig Connect Config
-type mysqlConnector struct {
+type MysqlConnector struct {
 	mutex       sync.RWMutex
 	connections map[string]*gorm.DB
 	sf          singleflight.Group
 	config      Configer
-	logger      logger.Interface
 }
 
 func init() {
-	
-	entity = new(mysqlConnector)
-	
-	entity.connections = make(map[string]*gorm.DB)
-	
-	entity.config = NewConfig()
-	
-}
 
-// WithLogger Customize
-func WithLogger(l logger.Interface) Option {
-	
-	return func(s *mysqlConnector) {
-		
-		s.logger = l
-		
-	}
-	
+	entity = new(MysqlConnector)
+
+	entity.connections = make(map[string]*gorm.DB)
+
+	entity.config = NewConfig()
+
 }
 
 // WithConfig Customize
 func WithConfig(c Configer) Option {
-	
-	return func(s *mysqlConnector) {
-		
+
+	return func(s *MysqlConnector) {
+
 		s.config = c
-		
+
 	}
-	
+
 }
 
-// New MysqlConnector
-func (m *mysqlConnector) New(options ...Option) *mysqlConnector {
-	
+// NewConnector MysqlConnector
+func NewConnector(options ...Option) *MysqlConnector {
+
 	for _, fn := range options {
-		
+
 		fn(entity)
 	}
-	
+
 	return entity
-	
+
 }
 
 // New Db Connected .
-func (m *mysqlConnector) connected(ctx context.Context, clusterName string) (*gorm.DB, error) {
-	
+func (m *MysqlConnector) connected(ctx context.Context, clusterName string) (*gorm.DB, error) {
+
 	var (
 		dbConn *gorm.DB
 		sqlDb  *sql.DB
 		err    error
 		conf   *ConnectConfig
 	)
-	
+
 	if conf, err = m.config.Get(clusterName); nil != err {
-		
+
+		logrus.WithFields(logrus.Fields{
+			"cluster_name": clusterName,
+			"conf":         conf,
+			"error":        err.Error(),
+		}).Error("mysql connect get config  error:")
+
 		return nil, err
-		
+
 	}
-	
+
+	logrus.WithFields(logrus.Fields{
+		"cluster_name": clusterName,
+		"conf":         conf,
+	}).Info("mysql connect")
+
+	// Connect Mysql
 	if dbConn, err = gorm.Open(mysql.New(conf.MysqlConfig), conf.GormConfig); nil != err {
-		
-		m.logger.Error(ctx, "mysql connect error:", conf)
-		
+
+		logrus.WithFields(logrus.Fields{
+			"cluster_name": clusterName,
+			"conf":         conf,
+			"error":        err.Error(),
+		}).Error("mysql connect error:")
+
 		return nil, err
 	}
-	
+
 	if sqlDb, err = dbConn.DB(); nil != err {
-		
-		m.logger.Error(ctx, "fetch sqlDb error:", conf)
-		
+
+		logrus.WithFields(logrus.Fields{
+			"cluster_name": clusterName,
+			"conf":         conf,
+			"error":        err.Error(),
+		}).Error("fetch sqlDb error:")
+
 		return nil, err
-		
+
 	}
-	
+
 	sqlDb.SetMaxIdleConns(conf.MysqlPoolConfig.MaxIdleConn)
-	
+
 	sqlDb.SetMaxOpenConns(conf.MysqlPoolConfig.MaxOpenConn)
-	
+
 	sqlDb.SetConnMaxLifetime(time.Duration(conf.MysqlPoolConfig.ConnMaxLifetime) * time.Second)
-	
+
 	m.storage(clusterName, dbConn)
-	
+
 	return dbConn, err
 }
 
 // Make Db Connect Return gorm db.
-func (m *mysqlConnector) Make(ctx context.Context, clusterName string) (db *gorm.DB, err error) {
-	
+func (m *MysqlConnector) Make(ctx context.Context, clusterName string) (db *gorm.DB, err error) {
+
 	var res interface{}
-	
+
 	if db = m.fetch(clusterName); nil != db {
-		
+
 		return db, nil
-		
+
 	}
-	
-	// Avoid introducing concurrency
+
+	//Avoid introducing concurrency
 	if res, err, _ = m.sf.Do(m.connectLockFlag(clusterName), func() (res interface{}, err error) {
-		
+
 		return m.connected(ctx, clusterName)
-		
+
 	}); nil != err {
-		
+
 		return nil, err
 	}
-	
+
 	return res.(*gorm.DB), nil
 }
 
 // Storage Db Connect .
-func (m *mysqlConnector) storage(clusterName string, db *gorm.DB) {
-	
+func (m *MysqlConnector) storage(clusterName string, db *gorm.DB) {
+
 	m.mutex.Lock()
-	
+
 	defer m.mutex.Unlock()
-	
+
 	m.connections[clusterName] = db
-	
+
 }
 
 // Fetch Db Connect .
-func (m *mysqlConnector) fetch(clusterName string) *gorm.DB {
-	
+func (m *MysqlConnector) fetch(clusterName string) *gorm.DB {
+
 	m.mutex.RLock()
-	
+
 	defer m.mutex.RUnlock()
-	
+
 	return m.connections[clusterName]
-	
+
 }
 
-// connect_lock
-func (m *mysqlConnector) connectLockFlag(clusterName string) string {
-	
+// Connect Lock Flag
+func (m *MysqlConnector) connectLockFlag(clusterName string) string {
+
 	return "connect_lock_" + clusterName
 }
