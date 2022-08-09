@@ -43,8 +43,6 @@ func init() {
 
 	entity.connections = make(map[string]*gorm.DB)
 
-	entity.config = NewConfig()
-
 }
 
 // WithConfig Customize
@@ -143,7 +141,7 @@ func (m *MysqlConnector) Make(ctx context.Context, clusterName string) (db *gorm
 
 	}
 
-	//Avoid introducing concurrency
+	// Avoid introducing concurrency
 	if res, err, _ = m.sf.Do(m.connectLockFlag(clusterName), func() (res interface{}, err error) {
 
 		return m.connected(ctx, clusterName)

@@ -1,9 +1,13 @@
 package mysql
 
 import (
-	"github.com/spf13/viper"
+	"github.com/sirupsen/logrus"
 	"go-connect/connecter/config/db"
 	logger "go-connect/log/gorm"
+	"go-micro.dev/v4/config"
+	"go-micro.dev/v4/config/encoder/json"
+	"go-micro.dev/v4/config/source"
+	"go-micro.dev/v4/config/source/file"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	glogger "gorm.io/gorm/logger"
@@ -13,34 +17,52 @@ import (
 const configPath = "./config/database.json"
 
 type Config struct {
-	v *viper.Viper
+	c config.Config
 }
 
-func NewConfig() *Config {
+func NewConfig() (c *Config, err error) {
 
-	v := viper.New()
+	var conf config.Config
 
-	v.SetConfigFile(configPath)
+	fileSource := file.NewSource(
+		file.WithPath(configPath),
+		source.WithEncoder(json.NewEncoder()),
+	)
+
+	if conf, err = config.NewConfig(); nil != err {
+		logrus.Error(
+			logrus.Fields{
+				"err":  err.Error(),
+				"path": configPath,
+			},
+		)
+		return nil, err
+	}
+
+	if err = conf.Load(fileSource); nil != err {
+
+		logrus.Error(
+			logrus.Fields{
+				"err":  err.Error(),
+				"path": configPath,
+			},
+		)
+
+		return nil, err
+	}
 
 	return &Config{
-		v: v,
-	}
+		c: conf,
+	}, nil
 }
 
 // Get Connect Config
 func (c *Config) Get(clusterName string) (res *ConnectConfig, err error) {
 
-	var config *db.ServerMysqlConfig
+	var mysqlConf *db.ServerMysqlConfig
 
 	// Load Config
-	if err = c.v.ReadInConfig(); nil != err {
-
-		return nil, err
-
-	}
-
-	// Unmarshal To Struct .
-	if err = c.v.UnmarshalKey(clusterName, &config); nil != err {
+	if err = c.c.Scan(mysqlConf); nil != err {
 
 		return nil, err
 
@@ -48,28 +70,28 @@ func (c *Config) Get(clusterName string) (res *ConnectConfig, err error) {
 
 	return &ConnectConfig{
 		MysqlConfig: mysql.Config{
-			DSN:                       config.MysqlConfig.Dsn,
-			SkipInitializeWithVersion: config.MysqlConfig.SkipInitializeWithVersion,
-			DefaultStringSize:         config.MysqlConfig.DefaultStringSize,
-			DisableDatetimePrecision:  config.MysqlConfig.DisableDatetimePrecision,
-			DontSupportRenameIndex:    config.MysqlConfig.DontSupportRenameIndex,
-			DontSupportRenameColumn:   config.MysqlConfig.DontSupportRenameColumn,
+			DSN:                       mysqlConf.MysqlConfig.Dsn,
+			SkipInitializeWithVersion: mysqlConf.MysqlConfig.SkipInitializeWithVersion,
+			DefaultStringSize:         mysqlConf.MysqlConfig.DefaultStringSize,
+			DisableDatetimePrecision:  mysqlConf.MysqlConfig.DisableDatetimePrecision,
+			DontSupportRenameIndex:    mysqlConf.MysqlConfig.DontSupportRenameIndex,
+			DontSupportRenameColumn:   mysqlConf.MysqlConfig.DontSupportRenameColumn,
 		},
 		GormConfig: &gorm.Config{
-			SkipDefaultTransaction:   config.GormConfig.SkipDefaultTransaction,
-			DisableNestedTransaction: config.GormConfig.DisableNestedTransaction,
-			AllowGlobalUpdate:        config.GormConfig.AllowGlobalUpdate,
+			SkipDefaultTransaction:   mysqlConf.GormConfig.SkipDefaultTransaction,
+			DisableNestedTransaction: mysqlConf.GormConfig.DisableNestedTransaction,
+			AllowGlobalUpdate:        mysqlConf.GormConfig.AllowGlobalUpdate,
 			Logger: logger.NewGORMLogger(logger.Config{
-				SlowThreshold:             time.Duration(config.GormConfig.SlowThreshold) * time.Millisecond,
-				IgnoreRecordNotFoundError: config.GormConfig.IgnoreRecordNotFoundError,
-				LogLevel:                  glogger.LogLevel(config.GormConfig.LogLevel),
-				Dsn:                       config.MysqlConfig.Dsn,
+				SlowThreshold:             time.Duration(mysqlConf.GormConfig.SlowThreshold) * time.Millisecond,
+				IgnoreRecordNotFoundError: mysqlConf.GormConfig.IgnoreRecordNotFoundError,
+				LogLevel:                  glogger.LogLevel(mysqlConf.GormConfig.LogLevel),
+				Dsn:                       mysqlConf.MysqlConfig.Dsn,
 			}),
 		},
 		MysqlPoolConfig: db.PoolConfig{
-			ConnMaxLifetime: config.PoolConfig.ConnMaxLifetime,
-			MaxIdleConn:     config.PoolConfig.MaxIdleConn,
-			MaxOpenConn:     config.PoolConfig.MaxOpenConn,
+			ConnMaxLifetime: mysqlConf.PoolConfig.ConnMaxLifetime,
+			MaxIdleConn:     mysqlConf.PoolConfig.MaxIdleConn,
+			MaxOpenConn:     mysqlConf.PoolConfig.MaxOpenConn,
 		},
 	}, nil
 }
