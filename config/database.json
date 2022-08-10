@@ -1,25 +1,24 @@
 {
   "test": {
-    "MysqlConfig": {
-      "Dsn"                      : "root:Zodiac-Attic-Profane@tcp(10.200.0.1:3306)/account?loc=Local&parseTime=true&readTimeout=1s&timeout=1s&writeTimeout=1s&charset=utf8mb4",
-      "SkipInitializeWithVersion": true,
-      "DefaultStringSize"        : 256,
-      "DisableDatetimePrecision" : true,
-      "DontSupportRenameIndex"   : true,
-      "DontSupportRenameColumn"  : true
+    "mysql_config": {
+      "dsn"                         : "",
+      "skip_initialize_with_version": true,
+      "default_string_size"         : 256,
+      "disable_datetime_precision"  : true,
+      "dont_support_rename_index"   : true,
+      "dont_support_rename_column"  : true
     },
-    "GormConfig" : {
-      "SkipDefaultTransaction"  : true,
-      "DisableNestedTransaction": true,
-      "AllowGlobalUpdate"       : true
+    "gorm_config" : {
+      "skip_default_transaction"  : true,
+      "disable_nested_transaction": true,
+      "allow_global_update"       : true
     },
-    "PoolConfig" : {
-      "ConnMaxLifeTime"          : 600,
-      "ConnMaxLifetime"          : 600,
-      "MaxOpenConn"              : 50,
-      "LogLevel"                 : 1,
-      "IgnoreRecordNotFoundError": true,
-      "SlowThreshold"            : 200
+    "pool_config" : {
+      "conn_max_life_time"           : 600,
+      "max_open_conn"                : 50,
+      "log_level"                    : 4,
+      "ignore_record_not_found_error": true,
+      "slow_threshold"               : 200
     }
   }
 }

@@ -30,6 +30,7 @@ type ConnectConfig struct {
 	MysqlPoolConfig db.PoolConfig `json:"mysql_pool_config"`
 }
 
+// Mysql Connector
 type MysqlConnector struct {
 	mutex       sync.RWMutex
 	connections map[string]*gorm.DB
@@ -45,19 +46,10 @@ func init() {
 
 }
 
-// WithConfig Customize
-func WithConfig(c Configer) Option {
-
-	return func(s *MysqlConnector) {
-
-		s.config = c
-
-	}
-
-}
-
 // NewConnector MysqlConnector
-func NewConnector(options ...Option) *MysqlConnector {
+func NewConnector(config Configer, options ...Option) *MysqlConnector {
+
+	entity.config = config
 
 	for _, fn := range options {
 
@@ -123,7 +115,7 @@ func (m *MysqlConnector) connected(ctx context.Context, clusterName string) (*go
 
 	sqlDb.SetMaxOpenConns(conf.MysqlPoolConfig.MaxOpenConn)
 
-	sqlDb.SetConnMaxLifetime(time.Duration(conf.MysqlPoolConfig.ConnMaxLifetime) * time.Second)
+	sqlDb.SetConnMaxLifetime(time.Duration(conf.MysqlPoolConfig.ConnMaxLifeTime) * time.Second)
 
 	m.storage(clusterName, dbConn)
 

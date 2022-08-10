@@ -3,7 +3,6 @@ module go-connect
 go 1.18
 
 require (
-	github.com/opencontainers/runc v0.1.1
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/sirupsen/logrus v1.8.1
 	github.com/uber/jaeger-client-go v2.30.0+incompatible

@@ -2,14 +2,14 @@ package db
 
 // PoolConfig Pool Settings
 type PoolConfig struct {
-	ConnMaxLifetime int `json:"conn_max_lifetime"`
+	ConnMaxLifeTime int `json:"conn_max_life_time"`
 	MaxIdleConn     int `json:"max_idle_conn"`
 	MaxOpenConn     int `json:"max_open_conn"`
 }
 
 // MysqlConfig Mysql Settings
 type MysqlConfig struct {
-	Dsn                       string `json:"'dsn'"`
+	Dsn                       string `json:"dsn"`
 	SkipInitializeWithVersion bool   `json:"skip_initialize_with_version"`
 	DefaultStringSize         uint   `json:"default_string_size"`
 	DisableDatetimePrecision  bool   `json:"disable_datetime_precision"`
