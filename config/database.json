@@ -1,0 +1,24 @@
+{
+  "test": {
+    "mysql_config": {
+      "dsn"                         : "",
+      "skip_initialize_with_version": true,
+      "default_string_size"         : 256,
+      "disable_datetime_precision"  : true,
+      "dont_support_rename_index"   : true,
+      "dont_support_rename_column"  : true
+    },
+    "gorm_config" : {
+      "skip_default_transaction"  : true,
+      "disable_nested_transaction": true,
+      "allow_global_update"       : true
+    },
+    "pool_config" : {
+      "conn_max_life_time"           : 600,
+      "max_open_conn"                : 50,
+      "log_level"                    : 4,
+      "ignore_record_not_found_error": true,
+      "slow_threshold"               : 200
+    }
+  }
+}
