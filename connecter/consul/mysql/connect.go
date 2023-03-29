@@ -2,7 +2,6 @@ package mysql
 
 import (
 	"database/sql"
-	"go-connect/connecter/mysql/log"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -19,7 +18,6 @@ type mysqlConnector struct {
 	connections map[string]*gorm.DB
 	config      Configer
 	logger      logger.Interface
-	log         log.Log
 }
 
 func init() {
@@ -77,23 +75,17 @@ func (m *mysqlConnector) connected(clusterName string) (*gorm.DB, error) {
 
 	if dbConn, err = gorm.Open(mysql.New(conf.MysqlConfig), conf.GormConfig); nil != err {
 
-		m.log.Error()
-
 		return nil, err
 	}
 
 	// 链接设置
 	if sqbDb, err = dbConn.DB(); nil != err {
 
-		m.log.Error()
-
 		return nil, err
 
 	}
 
 	if err = sqbDb.Ping(); nil != err {
-
-		m.log.Error()
 
 		return nil, err
 	}
