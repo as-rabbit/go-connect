@@ -3,8 +3,8 @@ package mysql
 import (
 	"context"
 	"database/sql"
+	"github.com/as-rabbit/go-connect/connecter/config/db"
 	"github.com/sirupsen/logrus"
-	"go-connect/connecter/config/db"
 	"golang.org/x/sync/singleflight"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

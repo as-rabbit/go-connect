@@ -2,8 +2,8 @@ package mysql
 
 import (
 	"fmt"
+	"github.com/as-rabbit/go-connect/connecter/config/db"
 	"github.com/sirupsen/logrus"
-	"go-connect/connecter/config/db"
 	"go-micro.dev/v4/config"
 	"go-micro.dev/v4/config/encoder/json"
 	"go-micro.dev/v4/config/source"
