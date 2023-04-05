@@ -10,25 +10,14 @@ import (
 )
 
 type WaterMillKafka struct {
-	sub        *kafka.Subscriber
-	pub        *kafka.Publisher
-	chanBuffer int64
+	brokers      []string
+	pub          *kafka.Publisher
+	chanBuffer   int64
+	saramaConfig *sarama.Config
+	logAdapter   watermill.LoggerAdapter
 }
 
-func NewWaterMillKafka(brokers []string, config *sarama.Config, consumerGroup string, adapter watermill.LoggerAdapter) event_interface.Event {
-	sub, err := kafka.NewSubscriber(
-		kafka.SubscriberConfig{
-			Brokers:               brokers,
-			Unmarshaler:           kafka.DefaultMarshaler{},
-			OverwriteSaramaConfig: config,
-			ConsumerGroup:         consumerGroup,
-		},
-		adapter,
-	)
-
-	if err != nil {
-		panic(err)
-	}
+func NewWaterMillKafka(brokers []string, config *sarama.Config, adapter watermill.LoggerAdapter) event_interface.Event {
 
 	pub, err := kafka.NewPublisher(
 		kafka.PublisherConfig{
@@ -42,13 +31,25 @@ func NewWaterMillKafka(brokers []string, config *sarama.Config, consumerGroup st
 	}
 
 	return &WaterMillKafka{
-		sub: sub,
-		pub: pub,
+		brokers:      brokers,
+		pub:          pub,
+		saramaConfig: config,
+		logAdapter:   adapter,
 	}
 }
 
-func (w *WaterMillKafka) Subscribe(ctx context.Context, topic string) (<-chan event_interface.Message, error) {
-	c, err := w.sub.Subscribe(ctx, topic)
+func (w *WaterMillKafka) Subscribe(ctx context.Context, topic, groupId string) (<-chan event_interface.Message, error) {
+	sub, err := kafka.NewSubscriber(
+		kafka.SubscriberConfig{
+			Brokers:               w.brokers,
+			Unmarshaler:           kafka.DefaultMarshaler{},
+			OverwriteSaramaConfig: w.saramaConfig,
+			ConsumerGroup:         groupId,
+		},
+		w.logAdapter,
+	)
+
+	c, err := sub.Subscribe(ctx, topic)
 	if err != nil {
 		return nil, err
 	}

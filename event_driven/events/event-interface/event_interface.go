@@ -9,6 +9,6 @@ type Message interface {
 }
 
 type Event interface {
-	Subscribe(ctx context.Context, topic string) (<-chan Message, error)
+	Subscribe(ctx context.Context, topic, groupId string) (<-chan Message, error)
 	Publish(ctx context.Context, topic string, messages ...Message) error
 }

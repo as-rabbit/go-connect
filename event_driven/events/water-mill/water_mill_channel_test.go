@@ -11,10 +11,15 @@ import (
 
 func TestWaterMillChannel(t *testing.T) {
 	topic := "test_topic"
-	c := NewWaterMillChannel(gochannel.Config{OutputChannelBuffer: 1}, watermill.NewStdLogger(true, true))
+	c := NewWaterMillChannel(gochannel.Config{OutputChannelBuffer: 1}, watermill.NewStdLogger(false, false))
 
 	ctx, cancel := context.WithCancel(context.Background())
-	msgs, err := c.Subscribe(ctx, topic)
+	msgs, err := c.Subscribe(ctx, topic, "test_group")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	msgs2, err := c.Subscribe(ctx, topic, "test_group")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -27,9 +32,12 @@ func TestWaterMillChannel(t *testing.T) {
 				break
 			case msg := <-msgs:
 				t.Logf("recive msg: %s", msg.GetPayload())
-				wait.Done()
 				msg.Ack()
+			case msg2 := <-msgs2:
+				t.Logf("recive msg2: %s", msg2.GetPayload())
+				msg2.Ack()
 			}
+			wait.Done()
 		}
 	}()
 
