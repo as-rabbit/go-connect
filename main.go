@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
-	"go-connect/connecter/file/mysql"
+	"github.com/as-rabbit/go-connect/connecter/file/mysql"
 )
 
 func main() {
