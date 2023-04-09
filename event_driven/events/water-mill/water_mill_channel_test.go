@@ -14,12 +14,13 @@ func TestWaterMillChannel(t *testing.T) {
 	c := NewWaterMillChannel(gochannel.Config{OutputChannelBuffer: 1}, watermill.NewStdLogger(false, false))
 
 	ctx, cancel := context.WithCancel(context.Background())
-	msgs, err := c.Subscribe(ctx, topic, "test_group")
+
+	msgs2, err := c.Subscribe(ctx, topic, "test_group_2")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	msgs2, err := c.Subscribe(ctx, topic, "test_group")
+	msgs, err := c.Subscribe(ctx, topic, "test_group_3")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,7 +44,7 @@ func TestWaterMillChannel(t *testing.T) {
 
 	wait.Add(1)
 	for i := 0; i < 10; i++ {
-		wait.Add(1)
+		wait.Add(2)
 		msg := NewWaterMillMessage(fmt.Sprintf("uuid_%d", i), []byte(fmt.Sprintf("Hello World! %d", i)))
 		c.Publish(ctx, topic, msg)
 		fmt.Println("i:", i)
